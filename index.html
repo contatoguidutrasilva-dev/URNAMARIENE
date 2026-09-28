@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urna Eletrônica</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #d1d8e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .urna {
+            display: flex;
+            background-color: #dbdbdb;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.8);
+            gap: 30px;
+            width: 800px;
+            height: 400px;
+            border: 1px solid #b0b0b0;
+        }
+
+        .tela {
+            background-color: #f4f6f5;
+            flex: 1;
+            border: 3px solid #999;
+            border-radius: 5px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .tela-topo {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+        .titulo-voto {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .cargo {
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .numeros-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .label-numero {
+            font-size: 16px;
+        }
+
+        .quadrados {
+            display: flex;
+            gap: 5px;
+        }
+
+        .numero {
+            width: 45px;
+            height: 55px;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            background-color: #fff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Animação do cursor piscando */
+        .pisca {
+            animation: piscar 1s infinite;
+        }
+
+        @keyframes piscar {
+            0% { border-color: #333; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+            50% { border-color: #4CAF50; box-shadow: 0 0 8px #4CAF50, inset 0 2px 4px rgba(0,0,0,0.05); }
+            100% { border-color: #333; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        }
+
+        /* Animação de entrada dos números (Zoom in) */
+        .zoom-in {
+            animation: zoomIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes zoomIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .candidata-info {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .candidata-info.ativo {
+            display: flex;
+        }
+
+        .foto-candidata {
+            width: 50px;
+            height: 62px;
+            object-fit: cover;
+            object-position: 50% 15%;
+            border: 1px solid #999;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .candidata-texto {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .mensagem-branco {
+            display: none;
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 40px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .instrucoes {
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            font-size: 13px;
+            margin-top: auto;
+            line-height: 1.4;
+        }
+
+        .tela-fim {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .tela-fim.ativo {
+            display: flex;
+            animation: fadeIn 0.5s ease-out, pulse 2s infinite 0.5s;
+        }
+
+        .foto-fim {
+            width: 90px;
+            height: 112px;
+            object-fit: cover;
+            object-position: 50% 15%;
+            border-radius: 6px;
+            border: 2px solid #333;
+        }
+
+        .fim-texto {
+            font-size: 52px;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .fim-cta {
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1.35;
+            text-transform: uppercase;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 0 0 0 rgba(0,0,0,0); }
+            50% { transform: scale(1.05); text-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+            100% { transform: scale(1); text-shadow: 0 0 0 rgba(0,0,0,0); }
+        }
+
+        .teclado {
+            background-color: #2b2d31;
+            width: 300px;
+            border-radius: 8px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .teclado-linha {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tecla {
+            background-color: #111;
+            color: #fff;
+            width: 65px;
+            height: 55px;
+            border: none;
+            border-radius: 5px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px #000, 0 8px 10px rgba(0,0,0,0.5); /* Efeito 3D */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: left;
+            padding: 5px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .tecla-numero {
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding-left: 12px;
+            padding-top: 8px;
+        }
+
+        /* Efeito de afundar o botão ao clicar */
+        .tecla:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px #000, 0 2px 3px rgba(0,0,0,0.5);
+        }
+
+        .teclado-acoes {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 10px;
+        }
+
+        .tecla-acao {
+            width: 75px;
+            height: 55px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .tecla-branco {
+            background-color: #fff;
+            box-shadow: 0 6px #ccc, 0 8px 10px rgba(0,0,0,0.4);
+        }
+        .tecla-branco:active {
+            box-shadow: 0 0px #ccc, 0 2px 3px rgba(0,0,0,0.4);
+        }
+
+        .tecla-corrige {
+            background-color: #f39c12;
+            box-shadow: 0 6px #c87f0a, 0 8px 10px rgba(0,0,0,0.4);
+        }
+        .tecla-corrige:active {
+            box-shadow: 0 0px #c87f0a, 0 2px 3px rgba(0,0,0,0.4);
+        }
+
+        .tecla-confirma {
+            background-color: #2ecc71;
+            height: 70px;
+            width: 85px;
+            font-size: 13px;
+            box-shadow: 0 6px #229954, 0 8px 10px rgba(0,0,0,0.4);
+        }
+        .tecla-confirma:active {
+            box-shadow: 0 0px #229954, 0 2px 3px rgba(0,0,0,0.4);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="urna">
+        <div class="tela">
+            <div id="tela-votacao" class="tela-topo">
+                <div class="titulo-voto">SEU VOTO PARA</div>
+                <div class="cargo">DEPUTADO FEDERAL</div>
+
+                <div class="numeros-container" id="area-numeros">
+                    <div class="label-numero">Número:</div>
+                    <div class="quadrados">
+                        <div class="numero pisca" id="num-1"></div>
+                        <div class="numero" id="num-2"></div>
+                        <div class="numero" id="num-3"></div>
+                        <div class="numero" id="num-4"></div>
+                    </div>
+                </div>
+
+                <div class="candidata-info" id="candidata-info">
+                    <img class="foto-candidata" src="foto-mariene.jpg" alt="Professora Mariene">
+                    <div class="candidata-texto">
+                        <strong>PROFESSORA MARIENE</strong><br>
+                        4431 · UNIÃO BRASIL
+                    </div>
+                </div>
+
+                <div class="mensagem-branco" id="msg-branco">
+                    VOTO EM BRANCO
+                </div>
+
+                <div class="instrucoes">
+                    Aperte a tecla:<br>
+                    <strong>CONFIRMA</strong> para CONFIRMAR este voto<br>
+                    <strong>CORRIGE</strong> para REINICIAR este voto
+                </div>
+            </div>
+
+            <div id="tela-fim" class="tela-fim">
+                <img class="foto-fim" src="foto-mariene.jpg" alt="Professora Mariene">
+                <div class="fim-texto">FIM</div>
+                <div class="fim-cta">Vem com a gente<br>e traz mais 1!</div>
+            </div>
+        </div>
+
+        <div class="teclado">
+            <div class="teclado-linha">
+                <button class="tecla tecla-numero" onclick="clicou(1)">1</button>
+                <button class="tecla tecla-numero" onclick="clicou(2)">2</button>
+                <button class="tecla tecla-numero" onclick="clicou(3)">3</button>
+            </div>
+            <div class="teclado-linha">
+                <button class="tecla tecla-numero" onclick="clicou(4)">4</button>
+                <button class="tecla tecla-numero" onclick="clicou(5)">5</button>
+                <button class="tecla tecla-numero" onclick="clicou(6)">6</button>
+            </div>
+            <div class="teclado-linha">
+                <button class="tecla tecla-numero" onclick="clicou(7)">7</button>
+                <button class="tecla tecla-numero" onclick="clicou(8)">8</button>
+                <button class="tecla tecla-numero" onclick="clicou(9)">9</button>
+            </div>
+            <div class="teclado-linha">
+                <button class="tecla tecla-numero" onclick="clicou(0)">0</button>
+            </div>
+
+            <div class="teclado-acoes">
+                <button class="tecla tecla-acao tecla-branco" onclick="branco()">BRANCO</button>
+                <button class="tecla tecla-acao tecla-corrige" onclick="corrige()">CORRIGE</button>
+                <button class="tecla tecla-acao tecla-confirma" onclick="confirma()">CONFIRMA</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="som-confirma-real" src="confirma-urna.mp3" preload="auto"></audio>
+
+    <script>
+        let numeroDigitado = '';
+        let votoEmBranco = false;
+        let finalizado = false;
+
+        // --- SISTEMA DE ÁUDIO (Web Audio API) ---
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function tocarSom(tipo) {
+            if (tipo === 'confirma') {
+                // Áudio real gravado, no lugar do bipe sintetizado
+                const somReal = document.getElementById('som-confirma-real');
+                somReal.currentTime = 0;
+                somReal.play();
+                return;
+            }
+
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            // Bipe curto e agudo das teclas numéricas
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1500, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+            osc.start();
+            // Desvanece rapidamente
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // --- LÓGICA DA URNA ---
+        function atualizarTela(novoNumero = false) {
+            if (finalizado) return;
+
+            // Limpa formatações
+            for (let i = 1; i <= 4; i++) {
+                let el = document.getElementById(`num-${i}`);
+                if (!novoNumero) {
+                    el.innerText = '';
+                    el.classList.remove('zoom-in');
+                }
+                el.classList.remove('pisca');
+            }
+
+            // Preenche os números
+            for (let i = 0; i < numeroDigitado.length; i++) {
+                let el = document.getElementById(`num-${i + 1}`);
+                el.innerText = numeroDigitado[i];
+
+                // Aplica a animação de zoom apenas no último número digitado
+                if (novoNumero && i === numeroDigitado.length - 1) {
+                    el.classList.remove('zoom-in');
+                    void el.offsetWidth; // Força o reflow para reiniciar a animação
+                    el.classList.add('zoom-in');
+                }
+            }
+
+            // Ativa o piscar no próximo quadrado
+            if (numeroDigitado.length < 4 && !votoEmBranco) {
+                document.getElementById(`num-${numeroDigitado.length + 1}`).classList.add('pisca');
+            }
+
+            // Mostra a foto e o número da candidata quando o número bate
+            const candidataInfo = document.getElementById('candidata-info');
+            if (numeroDigitado === '4431') {
+                candidataInfo.classList.add('ativo');
+            } else {
+                candidataInfo.classList.remove('ativo');
+            }
+        }
+
+        function clicou(n) {
+            tocarSom('tecla');
+            if (finalizado || votoEmBranco) return;
+
+            if (numeroDigitado.length < 4) {
+                numeroDigitado += n;
+                atualizarTela(true); // true indica que um novo número foi adicionado (dispara animação)
+            }
+        }
+
+        function branco() {
+            tocarSom('tecla');
+            if (finalizado) return;
+
+            numeroDigitado = '';
+            votoEmBranco = true;
+            document.getElementById('candidata-info').classList.remove('ativo');
+
+            // Transição suave ocultando/mostrando
+            let areaNumeros = document.getElementById('area-numeros');
+            areaNumeros.style.opacity = '0';
+            setTimeout(() => {
+                areaNumeros.style.display = 'none';
+                let msg = document.getElementById('msg-branco');
+                msg.style.display = 'block';
+                // Remove e adiciona para forçar animação
+                msg.style.animation = 'none';
+                void msg.offsetWidth;
+                msg.style.animation = 'fadeIn 0.4s ease-out';
+            }, 150);
+        }
+
+        function corrige() {
+            tocarSom('tecla');
+            if (finalizado) return;
+
+            numeroDigitado = '';
+            votoEmBranco = false;
+
+            let areaNumeros = document.getElementById('area-numeros');
+            document.getElementById('msg-branco').style.display = 'none';
+            areaNumeros.style.display = 'flex';
+            setTimeout(() => { areaNumeros.style.opacity = '1'; }, 50);
+
+            atualizarTela();
+        }
+
+        function confirma() {
+            if (finalizado) return;
+
+            if (numeroDigitado.length === 4 || votoEmBranco) {
+                tocarSom('confirma'); // Toca o som longo!
+
+                document.getElementById('tela-votacao').style.opacity = '0';
+
+                setTimeout(() => {
+                    document.getElementById('tela-votacao').style.display = 'none';
+                    document.getElementById('tela-fim').classList.add('ativo');
+                    finalizado = true;
+                }, 300);
+            } else {
+                // Se apertar confirma sem terminar, toca som de erro/tecla normal
+                tocarSom('tecla');
+            }
+        }
+
+        // Inicializa a tela ao carregar
+        atualizarTela();
+    </script>
+</body>
+</html>
